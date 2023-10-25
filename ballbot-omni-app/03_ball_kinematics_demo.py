@@ -252,8 +252,13 @@ def compute_phi(psi_1, psi_2, psi_3):
     # ---------------------------------------------------------
     # LAB 9
     # YOUR CODE GOES HERE
-    raise NotImplementedError
+    # raise NotImplementedError
     # ---------------------------------------------------------
+
+    phi_x = np.sqrt(2/3)*(RW/RK)*(psi_2 - psi_3)
+    phi_y = (np.sqrt(2)/3)*(RW/RK)*(-2*psi_1 + psi_2 + psi_3)
+    phi_z = (np.sqrt(2)/3)*(RW/RK)*(psi_1 + psi_2 + psi_3)
+
 
     return phi_x, phi_y, phi_z
 
