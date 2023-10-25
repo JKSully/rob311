@@ -223,7 +223,10 @@ def compute_motor_torques(Tx, Ty, Tz):
     # ---------------------------------------------------------
     # LAB 8
     # YOUR CODE GOES HERE
-    raise NotImplementedError
+    # raise NotImplementedError
+    T1 = (Tz - (2*Ty / np.cos(ALPHA)))/3
+    T2 = (Tz + (1/np.cos(ALPHA)*(-np.sqrt(3)*Tx + Ty))) / 3
+    T3 = (Tz + (1/np.cos(ALPHA)*(np.sqrt(3)*Tx + Ty))) / 3
     # ---------------------------------------------------------
 
     return T1, T2, T3
@@ -284,7 +287,7 @@ if __name__ == "__main__":
     phi_z = 0.0
 
     # Motor torques
-    T1 = 0.0
+    T1 = 2.0
     T2 = 0.0
     T3 = 0.0
 
@@ -326,9 +329,9 @@ if __name__ == "__main__":
         # Compute motor torques (T1, T2, and T3) with Tx, Ty, and Tz
         # Beginning with ball rolling toward positive y-axis
         # CHANGE THESE TO ADJUST THE ROLLING DIRECTION OF YOUR BALL-BOT
-        Tx = 2
+        Tx = 0
         Ty = 0
-        Tz = 0
+        Tz = 1
 
         T1, T2, T3 = compute_motor_torques(Tx, Ty, Tz)
         # ---------------------------------------------------------
