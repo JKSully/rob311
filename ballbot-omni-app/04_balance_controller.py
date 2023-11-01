@@ -3,7 +3,11 @@ import threading
 import time
 import numpy as np
 from threading import Thread
-from MBot.Messages.message_defs import mo_states_dtype, mo_cmds_dtype, mo_pid_params_dtype
+from MBot.Messages.message_defs import (
+    mo_states_dtype,
+    mo_cmds_dtype,
+    mo_pid_params_dtype,
+)
 from MBot.SerialProtocol.protocol import SerialProtocol
 from DataLogger import dataLogger
 
@@ -34,6 +38,7 @@ PRECISION_OF_SLEEP = 0.0001
 
 # Version of the SoftRealtimeLoop library
 __version__ = "1.0.0"
+
 
 class LoopKiller:
     def __init__(self, fade_time=0.0):
@@ -83,6 +88,7 @@ class LoopKiller:
             self._kill_now = False
             self._kill_soon = False
             self._soft_kill_time = None
+
 
 class SoftRealtimeLoop:
     def __init__(self, dt=0.001, report=False, fade=0.0):
@@ -176,16 +182,25 @@ class SoftRealtimeLoop:
         self.ttarg += self.dt
         return self.t1 - self.t0
 
+
 # ---------------------------------------------------------------------------
 
-def register_topics(ser_dev:SerialProtocol):
-    ser_dev.serializer_dict[101] = [lambda bytes: np.frombuffer(bytes, dtype=mo_cmds_dtype), lambda data: data.tobytes()]
-    ser_dev.serializer_dict[121] = [lambda bytes: np.frombuffer(bytes, dtype=mo_states_dtype), lambda data: data.tobytes()]
+
+def register_topics(ser_dev: SerialProtocol):
+    ser_dev.serializer_dict[101] = [
+        lambda bytes: np.frombuffer(bytes, dtype=mo_cmds_dtype),
+        lambda data: data.tobytes(),
+    ]
+    ser_dev.serializer_dict[121] = [
+        lambda bytes: np.frombuffer(bytes, dtype=mo_states_dtype),
+        lambda data: data.tobytes(),
+    ]
+
 
 # ---------------------------------------------------------------------------
 
 FREQ = 200
-DT = 1/FREQ
+DT = 1 / FREQ
 
 RW = 0.048
 RK = 0.1210
@@ -198,14 +213,22 @@ MAX_PLANAR_DUTY = 0.8
 # --------------------------------------------------------------------------
 
 # Proportional gains for the stability controllers (X-Z and Y-Z plane)
+# TODO:
+# 8.5 term
 
-KP_THETA_X = .0                                   # Adjust until the system balances
-KP_THETA_Y = .0                                   # Adjust until the system balances
+KP_THETA_X = 8.5  # Adjust until the system balances
+KP_THETA_Y = 8.5  # Adjust until the system balances
 
+KD_THETA_X = 0.0
+KD_THETA_Y = 0.0
+
+KI_THETA_X = 0.0
+KI_THETA_Y = 0.0
 # ---------------------------------------------------------------------------
 
+
 def compute_motor_torques(Tx, Ty, Tz):
-    '''
+    """
     Parameters:
     ----------
     Tx: Torque along x-axis
@@ -229,7 +252,7 @@ def compute_motor_torques(Tx, Ty, Tz):
     T1: Motor Torque 1
     T2: Motor Torque 2
     T3: Motor Torque 3
-    '''
+    """
 
     T1 = (-0.3333) * (Tz - (2.8284 * Ty))
     T2 = (-0.3333) * (Tz + (1.4142 * (Ty + 1.7320 * Tx)))
@@ -237,10 +260,12 @@ def compute_motor_torques(Tx, Ty, Tz):
 
     return T1, T2, T3
 
+
 # ---------------------------------------------------------------------------
 
+
 def compute_phi(psi_1, psi_2, psi_3):
-    '''
+    """
     Parameters:
     ----------
     psi_1: Encoder rotation (rad) [MOTOR 1]
@@ -252,7 +277,7 @@ def compute_phi(psi_1, psi_2, psi_3):
     phi_x: Ball rotation along x-axis (rad)
     phi_y: Ball rotation along y-axis (rad)
     phi_z: Ball rotation along z-axis (rad)
-    '''
+    """
 
     x = 0.323899 * psi_2 - 0.323899 * psi_3
     y = -0.374007 * psi_1 + 0.187003 * psi_2 + 0.187003 * psi_3
@@ -261,16 +286,19 @@ def compute_phi(psi_1, psi_2, psi_3):
     # returns phi_x, phi_y, phi_z
     return x, y, z
 
+
 if __name__ == "__main__":
-    trial_num = int(input('Trial Number? '))
-    filename = 'ROB311_Stability_Test_%i' % trial_num
-    dl = dataLogger(filename + '.txt')
+    trial_num = int(input("Trial Number? "))
+    filename = "ROB311_Stability_Test_%i" % trial_num
+    dl = dataLogger(filename + ".txt")
 
     ser_dev = SerialProtocol()
     register_topics(ser_dev)
 
     # Init serial
-    serial_read_thread = Thread(target = SerialProtocol.read_loop, args=(ser_dev,), daemon=True)
+    serial_read_thread = Thread(
+        target=SerialProtocol.read_loop, args=(ser_dev,), daemon=True
+    )
     serial_read_thread.start()
 
     # Local structs
@@ -294,14 +322,23 @@ if __name__ == "__main__":
     error_x = 0.0
     error_y = 0.0
 
-    commands['start'] = 1.0
+    error_dx = 0.0
+    error_dy = 0.0
+
+    error_x_prev = 0.0
+    error_y_prev = 0.0
+
+    error_x_acc = 0.0
+    error_y_acc = 0.0
+
+    commands["start"] = 1.0
 
     # Time for comms to sync
     time.sleep(1.0)
 
     ser_dev.send_topic_data(101, commands)
 
-    print('Beginning program!')
+    print("Beginning program!")
     i = 0
 
     for t in SoftRealtimeLoop(dt=DT, report=True):
@@ -316,31 +353,40 @@ if __name__ == "__main__":
         t_now = time.time() - t_start
 
         # Define variables for saving / analysis here - below you can create variables from the available states in message_defs.py
-        
+
         # Motor rotations
-        psi_1 = states['psi_1']
-        psi_2 = states['psi_2']
-        psi_3 = states['psi_3']
+        psi_1 = states["psi_1"]
+        psi_2 = states["psi_2"]
+        psi_3 = states["psi_3"]
 
         # Body lean angles
-        theta_x = (states['theta_roll'])
-        theta_y = (states['theta_pitch'])
+        theta_x = states["theta_roll"]
+        theta_y = states["theta_pitch"]
 
         # Controller error terms
+        error_x_prev = error_x
+        error_y_prev = error_y
+
         error_x = desired_theta_x - theta_x
         error_y = desired_theta_y - theta_y
 
+        error_x_acc += error_x * DT
+        error_y_acc += error_y * DT
+
+        # D terms
+        error_dx = (error_x - error_x_prev) / DT
+        error_dy = (error_y - error_y_prev) / DT
         # ---------------------------------------------------------
         # Compute motor torques (T1, T2, and T3) with Tx, Ty, and Tz
 
         # Proportional controller
-        Tx = KP_THETA_X * error_x
-        Ty = KP_THETA_Y * error_y
+        Tx = KP_THETA_X * error_x + KD_THETA_X * error_dx + KI_THETA_X * error_x_acc
+        Ty = KP_THETA_Y * error_y + KD_THETA_Y * error_dy + KI_THETA_Y * error_y_acc
 
         Tz = 0
 
         # ---------------------------------------------------------
-        # Saturating the planar torques 
+        # Saturating the planar torques
         # This keeps the system having the correct torque balance across the wheels in the face of saturation of any motor during the conversion from planar torques to M1-M3
         if np.abs(Tx) > MAX_PLANAR_DUTY:
             Tx = np.sign(Tx) * MAX_PLANAR_DUTY
@@ -358,29 +404,47 @@ if __name__ == "__main__":
 
         # ---------------------------------------------------------
 
-        print("Iteration no. {}, T1: {:.2f}, T2: {:.2f}, T3: {:.2f}".format(i, T1, T2, T3))
-        commands['motor_1_duty'] = T1
-        commands['motor_2_duty'] = T2
-        commands['motor_3_duty'] = T3  
+        print(
+            "Iteration no. {}, T1: {:.2f}, T2: {:.2f}, T3: {:.2f}".format(i, T1, T2, T3)
+        )
+        commands["motor_1_duty"] = T1
+        commands["motor_2_duty"] = T2
+        commands["motor_3_duty"] = T3
 
         # Construct the data matrix for saving - you can add more variables by replicating the format below
-        data = [i] + [t_now] + [theta_x] + [theta_y] + [T1] + [T2] + [T3] + [phi_x] + [phi_y] + [phi_z] + [psi_1] + [psi_2] + [psi_3]
+        data = (
+            [i]
+            + [t_now]
+            + [theta_x]
+            + [theta_y]
+            + [T1]
+            + [T2]
+            + [T3]
+            + [phi_x]
+            + [phi_y]
+            + [phi_z]
+            + [psi_1]
+            + [psi_2]
+            + [psi_3]
+        )
         dl.appendData(data)
 
-        print("Iteration no. {}, THETA X: {:.2f}, THETA Y: {:.2f}".format(i, theta_x, theta_y))
-        ser_dev.send_topic_data(101, commands) # Send motor torques
-    
-  
+        print(
+            "Iteration no. {}, THETA X: {:.2f}, THETA Y: {:.2f}".format(
+                i, theta_x, theta_y
+            )
+        )
+        ser_dev.send_topic_data(101, commands)  # Send motor torques
+
     dl.writeOut()
 
     print("Resetting Motor commands.")
     time.sleep(0.25)
-    commands['motor_1_duty'] = 0.0
-    commands['motor_2_duty'] = 0.0
-    commands['motor_3_duty'] = 0.0
+    commands["motor_1_duty"] = 0.0
+    commands["motor_2_duty"] = 0.0
+    commands["motor_3_duty"] = 0.0
     time.sleep(0.25)
-    commands['start'] = 0.0
+    commands["start"] = 0.0
     time.sleep(0.25)
     ser_dev.send_topic_data(101, commands)
     time.sleep(0.25)
-
