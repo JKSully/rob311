@@ -222,8 +222,8 @@ KP_THETA_Y = 8.5  # Adjust until the system balances
 KD_THETA_X = 0.0
 KD_THETA_Y = 0.0
 
-KI_THETA_X = 0.0
-KI_THETA_Y = 0.0
+KI_THETA_X = 0.1
+KI_THETA_Y = 0.1
 # ---------------------------------------------------------------------------
 
 
@@ -370,9 +370,6 @@ if __name__ == "__main__":
         error_x = desired_theta_x - theta_x
         error_y = desired_theta_y - theta_y
 
-        error_x_acc += error_x * DT
-        error_y_acc += error_y * DT
-
         # D terms
         error_dx = (error_x - error_x_prev) / DT
         error_dy = (error_y - error_y_prev) / DT
@@ -382,6 +379,9 @@ if __name__ == "__main__":
         # Proportional controller
         Tx = KP_THETA_X * error_x + KD_THETA_X * error_dx + KI_THETA_X * error_x_acc
         Ty = KP_THETA_Y * error_y + KD_THETA_Y * error_dy + KI_THETA_Y * error_y_acc
+
+        error_x_acc += error_x * DT
+        error_y_acc += error_y * DT
 
         Tz = 0
 
