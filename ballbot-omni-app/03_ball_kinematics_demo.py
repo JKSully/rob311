@@ -223,7 +223,10 @@ def compute_motor_torques(Tx, Ty, Tz):
     # ---------------------------------------------------------
     # LAB 8
     # YOUR CODE GOES HERE
-    raise NotImplementedError
+    # raise NotImplementedError
+    T1 = (Tz - (2*Ty / np.cos(ALPHA)))/3
+    T2 = (Tz + (1/np.cos(ALPHA)*(-np.sqrt(3)*Tx + Ty))) / 3
+    T3 = (Tz + (1/np.cos(ALPHA)*(np.sqrt(3)*Tx + Ty))) / 3
     # ---------------------------------------------------------
 
     return T1, T2, T3
@@ -249,8 +252,13 @@ def compute_phi(psi_1, psi_2, psi_3):
     # ---------------------------------------------------------
     # LAB 9
     # YOUR CODE GOES HERE
-    raise NotImplementedError
+    # raise NotImplementedError
     # ---------------------------------------------------------
+
+    phi_x = np.sqrt(2/3)*(RW/RK)*(psi_2 - psi_3)
+    phi_y = (np.sqrt(2)/3)*(RW/RK)*(-2*psi_1 + psi_2 + psi_3)
+    phi_z = (np.sqrt(2)/3)*(RW/RK)*(psi_1 + psi_2 + psi_3)
+
 
     return phi_x, phi_y, phi_z
 
@@ -275,6 +283,7 @@ if __name__ == "__main__":
     theta_roll = 0.0
     theta_pitch = 0.0
 
+    ## These are just initialized. Variable does not matter
     psi_1 = 0.0
     psi_2 = 0.0
     psi_3 = 0.0
@@ -320,14 +329,18 @@ if __name__ == "__main__":
 
         # YOUR CODE GOES HERE
         # ---------------------------------------------------------
+        psi_1 = (states['psi_1'])
+        psi_2 = (states['psi_2'])
+        psi_3 = (states['psi_3'])
+
 
         # ---------------------------------------------------------
         # LAB 8
         # Compute motor torques (T1, T2, and T3) with Tx, Ty, and Tz
         # Beginning with ball rolling toward positive y-axis
         # CHANGE THESE TO ADJUST THE ROLLING DIRECTION OF YOUR BALL-BOT
-        Tx = 2
-        Ty = 0
+        Tx = -1
+        Ty = 1
         Tz = 0
 
         T1, T2, T3 = compute_motor_torques(Tx, Ty, Tz)
@@ -342,8 +355,8 @@ if __name__ == "__main__":
         # LAB 9
         # Compute ball rotation (phi) with psi_1, psi_2, and psi_3
 
-        # phi_x, phi_y, phi_z = compute_phi(psi_1, psi_2, psi_3)
-        # print("PHI X: {}, PHI Y: {}, PHI Z: {}".format(phi_x, phi_y, phi_z))
+        phi_x, phi_y, phi_z = compute_phi(psi_1, psi_2, psi_3)
+        print("PHI X: {}, PHI Y: {}, PHI Z: {}".format(phi_x, phi_y, phi_z))
         # ---------------------------------------------
 
         # ---------------------------------------------
@@ -354,7 +367,11 @@ if __name__ == "__main__":
         # ball rotations - phi_x, phi_y, phi_z
         # wheel rotations - psi_1, psi_2, psi_3
  
-        data = [i, t_now, theta_x, theta_y]
+        # data = [i, t_now, theta_x, theta_y]
+        # temp = [T1, T2, T3, phi_x, phi_y, phi_z, psi_1, psi_2, psi_3]
+        # for x in temp:
+        #     data.append(temp)
+        data = [i, t_now, theta_x, theta_y, T1, T2, T3, phi_x, phi_y, phi_z, psi_1, psi_2, psi_3]
         # ---------------------------------------------
 
         dl.appendData(data)
